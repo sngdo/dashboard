@@ -228,7 +228,7 @@ async function fetchAllPrices() {
     done++;
     fill.style.width = (done / holdings.length * 100) + '%';
     document.getElementById('progressLabel').textContent = `주가 조회 중... (${done}/${holdings.length})`;
-    await sleep(200);
+    await sleep(800);
   }
 
   btn.disabled = false;
