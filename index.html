@@ -195,17 +195,6 @@ const sectorColor = {
 let prices = {};
 let currentSector = '전체';
 
-async function tryFetch(h) {
-  try {
-    const res = await fetch(`${WORKER_URL}?code=${h.code}`);
-    const data = await res.json();
-    if (data.price && data.price > 0) return data;
-    return null;
-  } catch(e) {
-    return null;
-  }
-}
-
 async function fetchAllPrices() {
   const btn  = document.getElementById('refreshBtn');
   const icon = document.getElementById('refreshIcon');
@@ -218,42 +207,39 @@ async function fetchAllPrices() {
   document.getElementById('refreshLabel').textContent = '조회 중...';
   wrap.classList.add('show');
   log.innerHTML = '';
-  fill.style.width = '0%';
-  setStatus('wait', 'KIS API에서 실시간 주가를 가져오는 중...');
+  fill.style.width = '10%';
+  setStatus('wait', 'Worker에서 전체 주가를 가져오는 중...');
+  document.getElementById('progressLabel').textContent = '전체 종목 조회 중... (시간이 걸릴 수 있어요)';
 
-  // 1차 시도
-  const failed = [];
-  let done = 0;
-  for (const h of holdings) {
-    const result = await tryFetch(h);
-    if (result) {
-      prices[h.code] = result;
-      addLog(`✅ ${h.name}: ${result.price.toLocaleString()}원 (${result.change>=0?'+':''}${result.change}%)`);
-    } else {
-      failed.push(h);
-      addLog(`⏳ ${h.name}: 재시도 예정`);
-    }
-    done++;
-    fill.style.width = (done / holdings.length * 100) + '%';
-    document.getElementById('progressLabel').textContent = `1차 조회 중... (${done}/${holdings.length})`;
-    await sleep(2000);
-  }
+  try {
+    // Worker에 전체 종목코드를 한번에 전달
+    const codes = holdings.map(h => h.code).join(',');
+    const res = await fetch(`${WORKER_URL}?codes=${codes}`);
+    const data = await res.json();
 
-  // 실패 종목 재시도
-  if (failed.length > 0) {
-    addLog(`🔄 ${failed.length}개 종목 재시도 중...`);
-    await sleep(3000);
-    for (const h of failed) {
-      document.getElementById('progressLabel').textContent = `재시도 중... ${h.name}`;
-      const result = await tryFetch(h);
-      if (result) {
-        prices[h.code] = result;
-        addLog(`✅ ${h.name} 재시도 성공: ${result.price.toLocaleString()}원`);
+    fill.style.width = '100%';
+    log.innerHTML = '';
+
+    let ok = 0;
+    holdings.forEach(h => {
+      const r = data[h.code];
+      if (r && r.price && r.price > 0) {
+        prices[h.code] = r;
+        ok++;
+        addLog(`✅ ${h.name}: ${r.price.toLocaleString()}원 (${r.change>=0?'+':''}${r.change}%)`);
       } else {
-        addLog(`❌ ${h.name}: 최종 실패`);
+        addLog(`⚠️ ${h.name}: ${r?.error || '조회 실패'}`);
       }
-      await sleep(5000);
-    }
+    });
+
+    const now = new Date();
+    const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    setStatus(ok > 0 ? 'ok' : 'err',
+      ok > 0 ? `${ok}/${holdings.length}개 종목 업데이트 완료 · ${t} 기준` : '주가 조회 실패');
+
+  } catch(e) {
+    setStatus('err', '오류: ' + e.message);
+    addLog('❌ ' + e.message);
   }
 
   btn.disabled = false;
@@ -261,26 +247,10 @@ async function fetchAllPrices() {
   document.getElementById('refreshLabel').textContent = '새로고침';
   wrap.classList.remove('show');
 
-  const ok = Object.keys(prices).length;
-  const now = new Date();
-  const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  setStatus(ok > 0 ? 'ok' : 'err',
-    ok > 0 ? `${ok}/${holdings.length}개 종목 업데이트 완료 · ${t} 기준` : '주가 조회 실패');
-
   renderSummary();
   renderHoldings(currentSector);
 }
 
-function sleep(ms) {
-  return new Promise(r => {
-    const start = Date.now();
-    function check() {
-      if (Date.now() - start >= ms) r();
-      else setTimeout(check, 100);
-    }
-    setTimeout(check, 100);
-  });
-}
 function addLog(msg) {
   const log = document.getElementById('progressLog');
   const div = document.createElement('div');
