@@ -15,16 +15,14 @@
   }
   body { background:var(--bg); color:var(--text); font-family:var(--font); max-width:430px; margin:0 auto; min-height:100vh; }
 
-  /* Topbar */
   .topbar { position:sticky; top:0; z-index:100; background:rgba(11,15,26,0.95); backdrop-filter:blur(12px); padding:14px 20px 0; border-bottom:1px solid var(--border); }
   .topbar-row { display:flex; align-items:center; justify-content:space-between; padding-bottom:10px; }
   .logo { font-size:18px; font-weight:800; color:var(--accent); }
   .logo span { color:var(--text); }
   .refresh-btn { display:flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--border); color:var(--text2); font-size:11px; font-weight:700; padding:6px 12px; border-radius:20px; cursor:pointer; transition:all 0.2s; }
-  .refresh-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .refresh-btn.loading { opacity:0.6; pointer-events:none; }
-  .refresh-icon { font-size:13px; transition:transform 0.5s; }
-  .refresh-icon.spin { animation:spin 1s linear infinite; }
+  .refresh-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .refresh-icon { font-size:13px; }
+  .refresh-icon.spin { animation:spin 1s linear infinite; display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
   .nav { display:flex; gap:4px; padding-bottom:10px; overflow-x:auto; scrollbar-width:none; }
@@ -32,33 +30,38 @@
   .nav-btn { flex-shrink:0; background:transparent; border:1px solid var(--border); color:var(--text2); font-size:12px; font-weight:600; padding:6px 14px; border-radius:20px; cursor:pointer; transition:all 0.2s; }
   .nav-btn.active { background:var(--accent); border-color:var(--accent); color:#0B0F1A; }
 
-  /* Pages */
   .page { display:none; padding:16px 20px 100px; }
   .page.active { display:block; }
   .sec-title { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:10px; margin-top:18px; }
   .sec-title:first-child { margin-top:4px; }
 
-  /* Status bar */
   .status-bar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; margin-bottom:12px; font-size:11px; }
-  .status-bar.ok  { background:rgba(38,200,135,0.1); border:1px solid rgba(38,200,135,0.2); color:var(--up); }
-  .status-bar.err { background:rgba(255,92,122,0.1); border:1px solid rgba(255,92,122,0.2); color:var(--down); }
-  .status-bar.loading { background:rgba(108,142,255,0.1); border:1px solid rgba(108,142,255,0.2); color:var(--accent2); }
+  .status-bar.ok    { background:rgba(38,200,135,0.1);  border:1px solid rgba(38,200,135,0.2);  color:var(--up); }
+  .status-bar.err   { background:rgba(255,92,122,0.1);  border:1px solid rgba(255,92,122,0.2);  color:var(--down); }
+  .status-bar.wait  { background:rgba(108,142,255,0.1); border:1px solid rgba(108,142,255,0.2); color:var(--accent2); }
   .status-dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
 
-  /* Summary */
+  /* 진행 상황 */
+  .progress-wrap { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; display:none; }
+  .progress-wrap.show { display:block; }
+  .progress-label { font-size:12px; color:var(--text2); margin-bottom:8px; }
+  .progress-track { background:var(--border); border-radius:4px; height:6px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--accent); border-radius:4px; transition:width 0.4s; }
+  .progress-log { margin-top:10px; font-size:10px; color:var(--text3); max-height:60px; overflow-y:auto; }
+  .progress-log div { padding:1px 0; }
+
   .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .sum-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; }
   .sum-label { font-size:11px; color:var(--text2); margin-bottom:6px; }
   .sum-value { font-size:17px; font-weight:800; letter-spacing:-0.5px; }
   .sum-sub { font-size:11px; color:var(--text3); margin-top:3px; }
 
-  /* Holdings */
   .sector-tabs { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin-bottom:12px; }
   .sector-tabs::-webkit-scrollbar { display:none; }
   .stab { flex-shrink:0; font-size:11px; font-weight:600; color:var(--text2); background:var(--card); border:1px solid var(--border); padding:4px 12px; border-radius:20px; cursor:pointer; }
   .stab.active { background:var(--accent2); border-color:var(--accent2); color:#fff; }
 
-  .holding-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; transition:border-color 0.2s; }
+  .holding-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
   .holding-card.credit-card { border-left:2px solid var(--warn); }
   .holding-row { display:flex; justify-content:space-between; align-items:flex-start; }
   .holding-name { font-size:14px; font-weight:700; }
@@ -71,9 +74,7 @@
   .holding-footer span { font-size:10px; color:var(--text2); }
   .up { color:var(--up); } .down { color:var(--down); }
   .credit-badge { display:inline-block; font-size:9px; font-weight:700; background:rgba(255,181,71,0.15); color:var(--warn); padding:1px 6px; border-radius:4px; margin-left:4px; vertical-align:middle; }
-  .price-loading { color:var(--text3); font-size:13px; }
 
-  /* AI News */
   .ai-header { background:linear-gradient(135deg,rgba(74,227,181,0.1),rgba(108,142,255,0.1)); border:1px solid rgba(74,227,181,0.2); border-radius:14px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
   .ai-icon { font-size:22px; }
   .ai-header-text { flex:1; }
@@ -83,16 +84,15 @@
   .ai-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .news-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
   .news-tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:6px; margin-bottom:8px; }
-  .news-tag.semi { background:rgba(108,142,255,0.2); color:var(--accent2); }
-  .news-tag.fin  { background:rgba(74,227,181,0.2); color:var(--accent); }
-  .news-tag.macro{ background:rgba(255,181,71,0.2); color:var(--warn); }
-  .news-tag.robot{ background:rgba(255,92,122,0.2); color:var(--down); }
+  .news-tag.semi  { background:rgba(108,142,255,0.2); color:var(--accent2); }
+  .news-tag.fin   { background:rgba(74,227,181,0.2);  color:var(--accent); }
+  .news-tag.macro { background:rgba(255,181,71,0.2);  color:var(--warn); }
+  .news-tag.robot { background:rgba(255,92,122,0.2);  color:var(--down); }
   .news-title { font-size:14px; font-weight:700; line-height:1.4; margin-bottom:6px; }
   .news-summary { font-size:12px; color:var(--text2); line-height:1.6; }
   .news-impact { display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
   .impact-dot { width:8px; height:8px; border-radius:50%; }
 
-  /* Valuation */
   .val-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:12px; }
   .val-head { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
   .val-company { font-size:15px; font-weight:800; }
@@ -104,18 +104,17 @@
   .val-metric-value { font-size:13px; font-weight:700; }
   .val-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; }
   .val-badge.good { background:rgba(38,200,135,0.15); color:var(--up); }
-  .val-badge.warn { background:rgba(255,181,71,0.15); color:var(--warn); }
-  .val-badge.bad  { background:rgba(255,92,122,0.15); color:var(--down); }
+  .val-badge.warn { background:rgba(255,181,71,0.15);  color:var(--warn); }
+  .val-badge.bad  { background:rgba(255,92,122,0.15);  color:var(--down); }
 
-  /* Bottom Nav */
   .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:rgba(19,25,41,0.97); backdrop-filter:blur(12px); border-top:1px solid var(--border); display:flex; padding:10px 0 20px; }
   .bnav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; cursor:pointer; color:var(--text3); transition:color 0.2s; }
   .bnav-btn.active { color:var(--accent); }
   .bnav-icon { font-size:20px; }
   .bnav-label { font-size:9px; font-weight:700; }
 
-  .loading { text-align:center; padding:30px; color:var(--text2); }
-  .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 10px; }
+  .spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 8px; }
+  .loading { text-align:center; padding:24px; color:var(--text2); font-size:12px; }
   .empty { text-align:center; padding:30px; color:var(--text3); font-size:13px; }
 </style>
 </head>
@@ -124,7 +123,7 @@
 <div class="topbar">
   <div class="topbar-row">
     <div class="logo">KRX<span>lens</span></div>
-    <button class="refresh-btn" id="refreshBtn" onclick="fetchAllPrices()">
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchPricesViaClaude()">
       <span class="refresh-icon" id="refreshIcon">↻</span>
       <span id="refreshLabel">주가 업데이트</span>
     </button>
@@ -139,9 +138,14 @@
 <!-- 포트폴리오 -->
 <div class="page active" id="page-portfolio">
   <div class="sec-title">내 자산 현황</div>
-  <div id="statusBar" class="status-bar loading">
+  <div id="statusBar" class="status-bar wait">
     <div class="status-dot"></div>
-    <span>주가 업데이트 버튼을 눌러 실시간 주가를 가져오세요</span>
+    <span>"주가 업데이트" 버튼을 눌러 Claude가 실시간 주가를 가져와요</span>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label" id="progressLabel">주가 조회 중...</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-log" id="progressLog"></div>
   </div>
   <div class="summary-grid" id="summaryGrid"></div>
   <div class="sec-title" style="margin-top:16px">보유 종목</div>
@@ -181,23 +185,22 @@
 </div>
 
 <script>
-// ── 포트폴리오 데이터 ──
-// Yahoo Finance 티커: 코스피→.KS, 코스닥→.KQ, ETF→.KS
+// ── 포트폴리오 ──
 const holdings = [
-  { name:'제주반도체',     code:'080220', ticker:'080220.KQ', avg:106171, qty:3166,  credit:false, sector:'반도체' },
-  { name:'아바텍',         code:'149150', ticker:'149150.KQ', avg:18063,  qty:15709, credit:false, sector:'반도체장비' },
-  { name:'두산로보틱스',   code:'454910', ticker:'454910.KQ', avg:119000, qty:2230,  credit:false, sector:'로봇' },
-  { name:'주성엔지니어링', code:'036930', ticker:'036930.KQ', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
-  { name:'현대차',         code:'005380', ticker:'005380.KS', avg:740644, qty:410,   credit:true,  sector:'자동차' },
-  { name:'산일전기',       code:'062930', ticker:'062930.KQ', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
-  { name:'LG이노텍',       code:'011070', ticker:'011070.KS', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
-  { name:'이수페타시스',   code:'007660', ticker:'007660.KQ', avg:145100, qty:916,   credit:true,  sector:'PCB' },
-  { name:'삼영',           code:'000370', ticker:'000370.KS', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
-  { name:'디아이',         code:'003160', ticker:'003160.KS', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
-  { name:'파워넷',         code:'037030', ticker:'037030.KQ', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
-  { name:'씨엠티엑스',     code:'222110', ticker:'222110.KQ', avg:120000, qty:2300,  credit:false, sector:'반도체' },
-  { name:'미래에셋증권',   code:'006800', ticker:'006800.KS', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
-  { name:'KODEX증권',      code:'102970', ticker:'102970.KS', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
+  { name:'제주반도체',     code:'080220', avg:106171, qty:3166,  credit:false, sector:'반도체' },
+  { name:'아바텍',         code:'149150', avg:18063,  qty:15709, credit:false, sector:'반도체장비' },
+  { name:'두산로보틱스',   code:'454910', avg:119000, qty:2230,  credit:false, sector:'로봇' },
+  { name:'주성엔지니어링', code:'036930', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
+  { name:'현대차',         code:'005380', avg:740644, qty:410,   credit:true,  sector:'자동차' },
+  { name:'산일전기',       code:'062930', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
+  { name:'LG이노텍',       code:'011070', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
+  { name:'이수페타시스',   code:'007660', avg:145100, qty:916,   credit:true,  sector:'PCB' },
+  { name:'삼영',           code:'000370', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
+  { name:'디아이',         code:'003160', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
+  { name:'파워넷',         code:'037030', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
+  { name:'씨엠티엑스',     code:'222110', avg:120000, qty:2300,  credit:false, sector:'반도체' },
+  { name:'미래에셋증권',   code:'006800', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
+  { name:'KODEX증권',      code:'102970', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
 ];
 
 const sectorColor = {
@@ -206,65 +209,109 @@ const sectorColor = {
   '금융':'#F472B6','ETF':'#94A3B8'
 };
 
-// 현재가 저장소
 let prices = {};
-let lastUpdated = null;
 let currentSector = '전체';
 
-// ── Yahoo Finance 주가 조회 ──
-// CORS 우회: allorigins 프록시 사용
-async function fetchPrice(ticker) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
-  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  try {
-    const res = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    const meta = data?.chart?.result?.[0]?.meta;
-    if (!meta) return null;
-    return {
-      price: meta.regularMarketPrice,
-      prevClose: meta.previousClose || meta.chartPreviousClose,
-    };
-  } catch(e) {
-    return null;
-  }
-}
-
-async function fetchAllPrices() {
+// ── Claude API로 주가 조회 ──
+async function fetchPricesViaClaude() {
   const btn = document.getElementById('refreshBtn');
   const icon = document.getElementById('refreshIcon');
   const label = document.getElementById('refreshLabel');
-  btn.classList.add('loading');
+  const wrap = document.getElementById('progressWrap');
+  const fill = document.getElementById('progressFill');
+  const log  = document.getElementById('progressLog');
+
+  btn.disabled = true;
   icon.classList.add('spin');
-  label.textContent = '업데이트 중...';
-  setStatus('loading', '실시간 주가를 가져오는 중...');
+  label.textContent = '조회 중...';
+  wrap.classList.add('show');
+  log.innerHTML = '';
+  fill.style.width = '0%';
+  setStatus('wait', 'Claude가 실시간 주가를 검색하고 있어요...');
 
-  let successCount = 0;
-  const promises = holdings.map(async h => {
-    const result = await fetchPrice(h.ticker);
-    if (result && result.price) {
-      prices[h.code] = result;
-      successCount++;
+  // 4개씩 배치로 나눠 조회 (API 부하 분산)
+  const batchSize = 4;
+  const batches = [];
+  for (let i = 0; i < holdings.length; i += batchSize) {
+    batches.push(holdings.slice(i, i + batchSize));
+  }
+
+  let done = 0;
+  for (const batch of batches) {
+    const names = batch.map(h => `${h.name}(${h.code})`).join(', ');
+    addLog(`🔍 조회 중: ${batch.map(h=>h.name).join(', ')}`);
+
+    const prompt = `다음 한국 주식의 오늘 현재가(종가 또는 최근 거래가)를 알려주세요: ${names}
+
+반드시 JSON만 반환하세요 (설명 없이):
+{"prices":{"종목코드":현재가숫자, ...}}
+
+예시: {"prices":{"080220":95000,"149150":22000}}
+
+숫자만 입력하세요 (콤마, 원화기호 없이). 모르는 종목은 null로.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 300,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content
+        .filter(c => c.type === 'text')
+        .map(c => c.text).join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        Object.entries(parsed.prices || {}).forEach(([code, price]) => {
+          if (price) {
+            prices[code] = price;
+            const name = holdings.find(h=>h.code===code)?.name || code;
+            addLog(`✅ ${name}: ${price.toLocaleString()}원`);
+          }
+        });
+      }
+    } catch(e) {
+      addLog(`⚠️ 오류: ${e.message}`);
     }
-  });
 
-  await Promise.all(promises);
+    done += batch.length;
+    fill.style.width = (done / holdings.length * 100) + '%';
+    document.getElementById('progressLabel').textContent =
+      `주가 조회 중... (${done}/${holdings.length})`;
+  }
 
-  lastUpdated = new Date();
-  btn.classList.remove('loading');
+  btn.disabled = false;
   icon.classList.remove('spin');
   label.textContent = '새로고침';
+  wrap.classList.remove('show');
+
+  const successCount = Object.keys(prices).length;
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
   if (successCount === 0) {
-    setStatus('err', '주가를 가져오지 못했어요. 잠시 후 다시 시도해주세요.');
-  } else if (successCount < holdings.length) {
-    setStatus('ok', `${successCount}/${holdings.length}개 종목 업데이트 완료 · ${fmtTime(lastUpdated)}`);
+    setStatus('err', '주가 조회에 실패했어요. 다시 시도해주세요.');
   } else {
-    setStatus('ok', `전체 ${successCount}개 종목 실시간 업데이트 완료 · ${fmtTime(lastUpdated)}`);
+    setStatus('ok', `${successCount}개 종목 업데이트 완료 · ${timeStr} 기준`);
   }
 
   renderSummary();
   renderHoldings(currentSector);
+}
+
+function addLog(msg) {
+  const log = document.getElementById('progressLog');
+  const div = document.createElement('div');
+  div.textContent = msg;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
 }
 
 function setStatus(type, msg) {
@@ -273,37 +320,28 @@ function setStatus(type, msg) {
   el.innerHTML = `<div class="status-dot"></div><span>${msg}</span>`;
 }
 
-// ── 가격 계산 ──
-function getPrice(h) {
-  return prices[h.code]?.price || h.avg; // 없으면 평균단가 fallback
-}
-function getPrevClose(h) {
-  return prices[h.code]?.prevClose || null;
-}
-function hasPriceData(h) {
-  return !!prices[h.code];
-}
+// ── 계산 ──
+function getPrice(h) { return prices[h.code] || h.avg; }
+function hasPrice(h) { return !!prices[h.code]; }
 
-function calcHolding(h) {
+function calc(h) {
   const price = getPrice(h);
   const val   = price * h.qty;
   const cost  = h.avg * h.qty;
   const pnl   = val - cost;
   const pct   = (price - h.avg) / h.avg * 100;
-  const prevClose = getPrevClose(h);
-  const dayChg = prevClose ? (price - prevClose) / prevClose * 100 : null;
-  return { ...h, price, val, cost, pnl, pct, dayChg };
+  return { ...h, price, val, cost, pnl, pct };
 }
 
-// ── 렌더링 ──
+// ── 요약 카드 ──
 function renderSummary() {
-  const calced = holdings.map(calcHolding);
+  const calced = holdings.map(calc);
   const totalVal  = calced.reduce((s,h)=>s+h.val, 0);
   const totalCost = calced.reduce((s,h)=>s+h.cost, 0);
   const totalPnl  = totalVal - totalCost;
   const totalPct  = totalPnl / totalCost * 100;
   const creditVal = calced.filter(h=>h.credit).reduce((s,h)=>s+h.val, 0);
-  const winCount  = calced.filter(h=>h.pnl>=0).length;
+  const win = calced.filter(h=>h.pnl>=0).length;
 
   document.getElementById('summaryGrid').innerHTML = `
     <div class="sum-card">
@@ -318,8 +356,8 @@ function renderSummary() {
     </div>
     <div class="sum-card">
       <div class="sum-label">수익/손실</div>
-      <div class="sum-value" style="color:var(--up)">${winCount}승</div>
-      <div class="sum-sub" style="color:var(--down)">${calced.length-winCount}패</div>
+      <div class="sum-value" style="color:var(--up)">${win}종목</div>
+      <div class="sum-sub" style="color:var(--down)">${calced.length-win}종목 손실</div>
     </div>
     <div class="sum-card">
       <div class="sum-label">신용 평가액</div>
@@ -328,14 +366,15 @@ function renderSummary() {
     </div>`;
 }
 
+// ── 보유 종목 ──
 function renderHoldings(sector='전체') {
   currentSector = sector;
-  const calced = holdings.map(calcHolding);
-  const totalVal = calced.reduce((s,h)=>s+h.val,0);
+  const calced = holdings.map(calc);
+  const totalVal = calced.reduce((s,h)=>s+h.val, 0);
   const filtered = sector==='전체' ? calced : calced.filter(h=>h.sector===sector);
   const sorted = [...filtered].sort((a,b)=>b.val-a.val);
 
-  const sectors = ['전체',...new Set(calced.map(h=>h.sector))];
+  const sectors = ['전체', ...new Set(calced.map(h=>h.sector))];
   document.getElementById('sectorTabs').innerHTML = sectors.map(s=>
     `<button class="stab ${s===sector?'active':''}" onclick="renderHoldings('${s}')">${s}</button>`
   ).join('');
@@ -343,10 +382,7 @@ function renderHoldings(sector='전체') {
   document.getElementById('holdingsList').innerHTML = sorted.map(h => {
     const weight = h.val/totalVal*100;
     const col = sectorColor[h.sector]||'#8A97B0';
-    const hasData = hasPriceData(h);
-    const dayStr = h.dayChg !== null
-      ? `<span style="color:var(--text3);margin-left:6px">당일 ${h.dayChg>=0?'+':''}${h.dayChg.toFixed(1)}%</span>`
-      : '';
+    const priceStr = hasPrice(h) ? h.price.toLocaleString()+'원' : `<span style="color:var(--text3)">${h.avg.toLocaleString()}원 (매입가)</span>`;
     return `<div class="holding-card ${h.credit?'credit-card':''}">
       <div class="holding-row">
         <div>
@@ -354,8 +390,8 @@ function renderHoldings(sector='전체') {
           <div class="holding-sub">${h.code} · ${h.sector} · ${h.qty.toLocaleString()}주</div>
         </div>
         <div>
-          <div class="holding-price ${hasData?'':'price-loading'}">${hasData ? h.price.toLocaleString()+'원' : '─'}</div>
-          <div class="holding-chg ${h.pct>=0?'up':'down'}">${hasData ? (h.pct>=0?'▲':'▼')+' '+Math.abs(h.pct).toFixed(1)+'%' : '업데이트 필요'}${dayStr}</div>
+          <div class="holding-price">${priceStr}</div>
+          <div class="holding-chg ${h.pct>=0?'up':'down'}">${hasPrice(h)?(h.pct>=0?'▲':'▼')+' '+Math.abs(h.pct).toFixed(1)+'%':'─'}</div>
         </div>
       </div>
       <div class="holding-bar-bg">
@@ -369,7 +405,7 @@ function renderHoldings(sector='전체') {
   }).join('');
 }
 
-// ── 밸류에이션 (추정 재무 데이터) ──
+// ── 밸류에이션 ──
 const valuationData = [
   { name:'제주반도체',     code:'080220', per:18.2, pbr:1.2,  roe:7.1,  debt:28,  cap:'3,115억' },
   { name:'아바텍',         code:'149150', per:12.4, pbr:1.8,  roe:14.8, debt:22,  cap:'3,379억' },
@@ -383,7 +419,7 @@ const valuationData = [
 function renderValuation() {
   document.getElementById('valuationList').innerHTML = valuationData.map(v => {
     const h = holdings.find(x=>x.code===v.code);
-    const price = prices[v.code]?.price || null;
+    const price = prices[v.code] || null;
     const pct = h && price ? (price-h.avg)/h.avg*100 : null;
     return `<div class="val-card">
       <div class="val-head">
@@ -392,8 +428,8 @@ function renderValuation() {
           <div style="font-size:10px;color:var(--text2)">${v.code} · 시총 ${v.cap}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:15px;font-weight:800">${price ? price.toLocaleString()+'원' : '─'}</div>
-          ${pct!==null ? `<div style="font-size:11px" class="${pct>=0?'up':'down'}">${pct>=0?'+':''}${pct.toFixed(1)}%</div>` : ''}
+          <div style="font-size:15px;font-weight:800">${price?price.toLocaleString()+'원':'─'}</div>
+          ${pct!==null?`<div style="font-size:11px" class="${pct>=0?'up':'down'}">${pct>=0?'+':''}${pct.toFixed(1)}%</div>`:''}
         </div>
       </div>
       <div class="val-metrics">
@@ -408,7 +444,7 @@ function renderValuation() {
         <div class="val-metric"><div class="val-metric-label">평균단가</div>
           <div class="val-metric-value" style="font-size:11px">${h?.avg.toLocaleString()||'─'}원</div></div>
         <div class="val-metric"><div class="val-metric-label">손익률</div>
-          <div class="val-metric-value ${pct>=0?'up':'down'}">${pct!==null?(pct>=0?'+':'')+pct.toFixed(1)+'%':'─'}</div></div>
+          <div class="val-metric-value ${pct!==null?(pct>=0?'up':'down'):''}">${pct!==null?(pct>=0?'+':'')+pct.toFixed(1)+'%':'─'}</div></div>
       </div>
     </div>`;
   }).join('');
@@ -419,49 +455,50 @@ async function generateBriefing() {
   const btn = document.getElementById('briefingBtn');
   const content = document.getElementById('newsContent');
   btn.disabled=true; btn.textContent='분석중...';
-  content.innerHTML=`<div class="loading"><div class="spinner"></div>포트폴리오를 분석하고 있어요...</div>`;
+  content.innerHTML=`<div class="loading"><div class="spinner"></div>포트폴리오 분석 중...</div>`;
 
-  const calced = holdings.map(calcHolding);
+  const calced = holdings.map(calc);
   const totalVal  = calced.reduce((s,h)=>s+h.val,0);
   const totalCost = calced.reduce((s,h)=>s+h.cost,0);
   const totalPnl  = totalVal-totalCost;
   const totalPct  = totalPnl/totalCost*100;
 
-  const portSummary = calced.map(h=>
-    `${h.name}(${h.credit?'신용':'일반'}): 평균 ${h.avg.toLocaleString()}원 → 현재 ${h.price.toLocaleString()}원 (${h.pct>=0?'+':''}${h.pct.toFixed(1)}%), 평가 ${fmt(h.val)}원`
+  const summary = calced.map(h=>
+    `${h.name}(${h.credit?'신용':'일반'}): 평균 ${h.avg.toLocaleString()}원 / 현재 ${h.price.toLocaleString()}원 / ${h.pct>=0?'+':''}${h.pct.toFixed(1)}% / 평가 ${fmt(h.val)}원`
   ).join('\n');
 
-  const prompt = `당신은 한국 주식 전문 투자 애널리스트입니다. 아래 포트폴리오를 분석해 AI 브리핑을 작성해주세요.
+  const prompt = `한국 주식 전문 애널리스트로서 아래 포트폴리오를 분석해 AI 브리핑을 작성하세요.
 
-총 평가: ${fmt(totalVal)}원 / 총 손익: ${totalPnl>=0?'+':''}${fmt(totalPnl)}원 (${totalPct.toFixed(2)}%)
-신용 종목 다수 보유 주의.
+총평가: ${fmt(totalVal)}원 | 총손익: ${totalPnl>=0?'+':''}${fmt(totalPnl)}원 (${totalPct.toFixed(2)}%)
 
-보유:
-${portSummary}
+${summary}
 
 JSON만 반환 (마크다운 없이):
-{"briefings":[{"tag":"카테고리","tagType":"semi|robot|fin|macro","title":"제목(20자이내)","summary":"분석 3~4문장(수치포함)","impact":"positive|negative|neutral","relatedStocks":["종목"]}]}
+{"briefings":[{"tag":"카테고리","tagType":"semi|robot|fin|macro","title":"제목20자이내","summary":"분석3~4문장수치포함","impact":"positive|negative|neutral","relatedStocks":["종목명"]}]}
 
-4개 브리핑. 마지막은 신용 리스크 분석.`;
+4개 작성. 반도체섹터, 로봇/신성장, 손익현황, 신용리스크 순서로.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:1500,
+        messages:[{role:'user',content:prompt}]
+      })
     });
     const data = await res.json();
     const text = data.content.map(i=>i.text||'').join('');
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
-    const impactCol={positive:'var(--up)',negative:'var(--down)',neutral:'var(--warn)'};
-    const impactLbl={positive:'호재',negative:'악재',neutral:'중립'};
+    const iCol={positive:'var(--up)',negative:'var(--down)',neutral:'var(--warn)'};
+    const iLbl={positive:'호재',negative:'악재',neutral:'중립'};
     content.innerHTML = parsed.briefings.map(b=>`
       <div class="news-card">
         <span class="news-tag ${b.tagType}">${b.tag}</span>
         <div class="news-title">${b.title}</div>
         <div class="news-summary">${b.summary}</div>
         <div class="news-impact">
-          <div class="impact-dot" style="background:${impactCol[b.impact]}"></div>
-          <span style="font-size:10px;color:var(--text2)">영향: <strong style="color:${impactCol[b.impact]}">${impactLbl[b.impact]}</strong></span>
+          <div class="impact-dot" style="background:${iCol[b.impact]}"></div>
+          <span style="font-size:10px;color:var(--text2)">영향: <strong style="color:${iCol[b.impact]}">${iLbl[b.impact]}</strong></span>
           <span style="margin-left:auto;font-size:10px;color:var(--text3)">${b.relatedStocks?.join(', ')}</span>
         </div>
       </div>`).join('');
@@ -490,11 +527,8 @@ function fmt(n) {
   if(abs>=1e4) return Math.round(n/1e4)+'만';
   return n.toLocaleString();
 }
-function fmtTime(d) {
-  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 기준`;
-}
 
-// ── 초기화 ──
+// 초기 렌더
 renderSummary();
 renderHoldings();
 </script>
