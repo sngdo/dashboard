@@ -271,7 +271,16 @@ async function fetchAllPrices() {
   renderHoldings(currentSector);
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function sleep(ms) {
+  return new Promise(r => {
+    const start = Date.now();
+    function check() {
+      if (Date.now() - start >= ms) r();
+      else setTimeout(check, 100);
+    }
+    setTimeout(check, 100);
+  });
+}
 function addLog(msg) {
   const log = document.getElementById('progressLog');
   const div = document.createElement('div');
