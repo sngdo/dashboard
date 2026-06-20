@@ -40,7 +40,7 @@
   .progress-label { font-size:12px; color:var(--text2); margin-bottom:8px; }
   .progress-track { background:var(--border); border-radius:4px; height:6px; overflow:hidden; }
   .progress-fill { height:100%; background:var(--accent); border-radius:4px; transition:width 0.4s; }
-  .progress-log { margin-top:10px; font-size:10px; color:var(--text3); max-height:60px; overflow-y:auto; }
+  .progress-log { margin-top:10px; font-size:10px; color:var(--text3); max-height:80px; overflow-y:auto; }
   .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .sum-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; }
   .sum-label { font-size:11px; color:var(--text2); margin-bottom:6px; }
@@ -167,24 +167,24 @@
 </div>
 
 <script>
-// ★ Cloudflare Worker URL ★
 const WORKER_URL = 'https://kis-proxy.sngdo77.workers.dev';
 
+// ★ market: J=코스피, Q=코스닥
 const holdings = [
-  { name:'제주반도체',     code:'080220', avg:106171, qty:3166,  credit:false, sector:'반도체' },
-  { name:'아바텍',         code:'149150', avg:18063,  qty:15709, credit:false, sector:'반도체장비' },
-  { name:'두산로보틱스',   code:'454910', avg:119000, qty:2230,  credit:false, sector:'로봇' },
-  { name:'주성엔지니어링', code:'036930', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
-  { name:'현대차',         code:'005380', avg:740644, qty:410,   credit:true,  sector:'자동차' },
-  { name:'산일전기',       code:'062930', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
-  { name:'LG이노텍',       code:'011070', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
-  { name:'이수페타시스',   code:'007660', avg:145100, qty:916,   credit:true,  sector:'PCB' },
-  { name:'삼영',           code:'000370', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
-  { name:'디아이',         code:'003160', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
-  { name:'파워넷',         code:'037030', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
-  { name:'씨엠티엑스',     code:'222110', avg:120000, qty:2300,  credit:false, sector:'반도체' },
-  { name:'미래에셋증권',   code:'006800', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
-  { name:'KODEX증권',      code:'102970', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
+  { name:'제주반도체',     code:'080220', market:'Q', avg:106171, qty:3166,  credit:false, sector:'반도체' },
+  { name:'아바텍',         code:'149150', market:'Q', avg:18063,  qty:15709, credit:false, sector:'반도체장비' },
+  { name:'두산로보틱스',   code:'454910', market:'Q', avg:119000, qty:2230,  credit:false, sector:'로봇' },
+  { name:'주성엔지니어링', code:'036930', market:'Q', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
+  { name:'현대차',         code:'005380', market:'J', avg:740644, qty:410,   credit:true,  sector:'자동차' },
+  { name:'산일전기',       code:'062930', market:'Q', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
+  { name:'LG이노텍',       code:'011070', market:'J', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
+  { name:'이수페타시스',   code:'007660', market:'Q', avg:145100, qty:916,   credit:true,  sector:'PCB' },
+  { name:'삼영',           code:'000370', market:'J', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
+  { name:'디아이',         code:'003160', market:'J', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
+  { name:'파워넷',         code:'037030', market:'Q', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
+  { name:'씨엠티엑스',     code:'222110', market:'Q', avg:120000, qty:2300,  credit:false, sector:'반도체' },
+  { name:'미래에셋증권',   code:'006800', market:'J', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
+  { name:'KODEX증권',      code:'102970', market:'J', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
 ];
 
 const sectorColor = {
@@ -214,13 +214,13 @@ async function fetchAllPrices() {
   let done = 0;
   for (const h of holdings) {
     try {
-      const res = await fetch(`${WORKER_URL}?code=${h.code}`);
+      const res = await fetch(`${WORKER_URL}?code=${h.code}&market=${h.market}`);
       const data = await res.json();
-      if (data.price) {
+      if (data.price && data.price > 0) {
         prices[h.code] = data;
-        addLog(`✅ ${h.name}: ${data.price.toLocaleString()}원 (${data.change >= 0 ? '+' : ''}${data.change}%)`);
+        addLog(`✅ ${h.name}: ${data.price.toLocaleString()}원 (${data.change>=0?'+':''}${data.change}%)`);
       } else {
-        addLog(`⚠️ ${h.name}: ${data.error || '조회 실패'}`);
+        addLog(`⚠️ ${h.name}: ${data.error || '주가 없음'}`);
       }
     } catch(e) {
       addLog(`❌ ${h.name}: ${e.message}`);
@@ -228,7 +228,7 @@ async function fetchAllPrices() {
     done++;
     fill.style.width = (done / holdings.length * 100) + '%';
     document.getElementById('progressLabel').textContent = `주가 조회 중... (${done}/${holdings.length})`;
-    await sleep(800);
+    await sleep(300);
   }
 
   btn.disabled = false;
@@ -240,7 +240,7 @@ async function fetchAllPrices() {
   const now = new Date();
   const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   setStatus(ok > 0 ? 'ok' : 'err',
-    ok > 0 ? `${ok}개 종목 실시간 업데이트 완료 · ${t} 기준` : '주가 조회 실패. API 키를 확인해주세요.');
+    ok > 0 ? `${ok}/${holdings.length}개 종목 업데이트 완료 · ${t} 기준` : '주가 조회 실패');
 
   renderSummary();
   renderHoldings(currentSector);
@@ -261,7 +261,7 @@ function setStatus(type, msg) {
 }
 
 function getPrice(h)  { return prices[h.code]?.price || h.avg; }
-function hasPrice(h)  { return !!prices[h.code]; }
+function hasPrice(h)  { return !!prices[h.code] && prices[h.code].price > 0; }
 function calc(h) {
   const price = getPrice(h);
   const val = price * h.qty, cost = h.avg * h.qty;
@@ -270,10 +270,10 @@ function calc(h) {
 
 function renderSummary() {
   const c = holdings.map(calc);
-  const tv = c.reduce((s,h)=>s+h.val,0), tc = c.reduce((s,h)=>s+h.cost,0);
-  const tp = tv-tc, tpct = tp/tc*100;
-  const cv = c.filter(h=>h.credit).reduce((s,h)=>s+h.val,0);
-  const win = c.filter(h=>h.pnl>=0).length;
+  const tv=c.reduce((s,h)=>s+h.val,0), tc=c.reduce((s,h)=>s+h.cost,0);
+  const tp=tv-tc, tpct=tp/tc*100;
+  const cv=c.filter(h=>h.credit).reduce((s,h)=>s+h.val,0);
+  const win=c.filter(h=>h.pnl>=0).length;
   document.getElementById('summaryGrid').innerHTML = `
     <div class="sum-card"><div class="sum-label">총 평가금액</div>
       <div class="sum-value" style="font-size:15px">${fmt(tv)}원</div>
@@ -298,9 +298,9 @@ function renderHoldings(sector='전체') {
   document.getElementById('sectorTabs').innerHTML = sectors.map(s=>
     `<button class="stab ${s===sector?'active':''}" onclick="renderHoldings('${s}')">${s}</button>`).join('');
   document.getElementById('holdingsList').innerHTML = [...filtered].sort((a,b)=>b.val-a.val).map(h => {
-    const w = h.val/tv*100, col = sectorColor[h.sector]||'#8A97B0';
-    const chg = prices[h.code]?.change;
-    const dayStr = chg!=null ? `<span style="margin-left:6px;color:${chg>=0?'var(--up)':'var(--down)'}">당일 ${chg>=0?'+':''}${chg}%</span>` : '';
+    const w=h.val/tv*100, col=sectorColor[h.sector]||'#8A97B0';
+    const chg=prices[h.code]?.change;
+    const dayStr=chg!=null?`<span style="margin-left:6px;color:${chg>=0?'var(--up)':'var(--down)'}">당일 ${chg>=0?'+':''}${chg}%</span>`:'';
     return `<div class="holding-card ${h.credit?'credit-card':''}">
       <div class="holding-row">
         <div><div class="holding-name">${h.name}${h.credit?'<span class="credit-badge">신용</span>':''}</div>
@@ -328,9 +328,9 @@ const valuationData = [
 
 function renderValuation() {
   document.getElementById('valuationList').innerHTML = valuationData.map(v => {
-    const h = holdings.find(x=>x.code===v.code);
-    const price = prices[v.code]?.price || null;
-    const pct = h && price ? (price-h.avg)/h.avg*100 : null;
+    const h=holdings.find(x=>x.code===v.code);
+    const price=prices[v.code]?.price||null;
+    const pct=h&&price?(price-h.avg)/h.avg*100:null;
     return `<div class="val-card">
       <div class="val-head">
         <div><div class="val-company">${v.name}</div>
@@ -352,34 +352,34 @@ function renderValuation() {
 }
 
 async function generateBriefing() {
-  const btn = document.getElementById('briefingBtn');
-  const content = document.getElementById('newsContent');
+  const btn=document.getElementById('briefingBtn');
+  const content=document.getElementById('newsContent');
   btn.disabled=true; btn.textContent='분석중...';
   content.innerHTML=`<div class="loading"><div class="spinner"></div>포트폴리오 분석 중...</div>`;
-  const c = holdings.map(calc);
-  const tv=c.reduce((s,h)=>s+h.val,0), tc=c.reduce((s,h)=>s+h.cost,0), tp=tv-tc;
-  const prompt = `한국 주식 전문 애널리스트로서 아래 포트폴리오를 분석해 AI 브리핑을 작성하세요.
+  const c=holdings.map(calc);
+  const tv=c.reduce((s,h)=>s+h.val,0),tc=c.reduce((s,h)=>s+h.cost,0),tp=tv-tc;
+  const prompt=`한국 주식 전문 애널리스트로서 아래 포트폴리오를 분석해 AI 브리핑을 작성하세요.
 총평가: ${fmt(tv)}원 | 총손익: ${tp>=0?'+':''}${fmt(tp)}원 (${(tp/tc*100).toFixed(2)}%)
 ${c.map(h=>`${h.name}(${h.credit?'신용':'일반'}): 평균 ${h.avg.toLocaleString()}원 / 현재 ${h.price.toLocaleString()}원 / ${h.pct>=0?'+':''}${h.pct.toFixed(1)}%`).join('\n')}
 JSON만 반환:{"briefings":[{"tag":"카테고리","tagType":"semi|robot|fin|macro","title":"제목20자이내","summary":"분석3~4문장","impact":"positive|negative|neutral","relatedStocks":["종목"]}]}
 4개 작성. 반도체섹터, 로봇/신성장, 손익현황, 신용리스크 순서로.`;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})
     });
-    const data = await res.json();
-    const parsed = JSON.parse(data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    const data=await res.json();
+    const parsed=JSON.parse(data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
     const iC={positive:'var(--up)',negative:'var(--down)',neutral:'var(--warn)'};
     const iL={positive:'호재',negative:'악재',neutral:'중립'};
-    content.innerHTML = parsed.briefings.map(b=>`
+    content.innerHTML=parsed.briefings.map(b=>`
       <div class="news-card"><span class="news-tag ${b.tagType}">${b.tag}</span>
         <div class="news-title">${b.title}</div><div class="news-summary">${b.summary}</div>
         <div class="news-impact"><div class="impact-dot" style="background:${iC[b.impact]}"></div>
           <span style="font-size:10px;color:var(--text2)">영향: <strong style="color:${iC[b.impact]}">${iL[b.impact]}</strong></span>
           <span style="margin-left:auto;font-size:10px;color:var(--text3)">${b.relatedStocks?.join(', ')}</span>
         </div></div>`).join('');
-  } catch(e) { content.innerHTML=`<div class="empty">⚠️ 오류: ${e.message}</div>`; }
+  } catch(e){content.innerHTML=`<div class="empty">⚠️ 오류: ${e.message}</div>`;}
   btn.disabled=false; btn.textContent='재분석';
 }
 
