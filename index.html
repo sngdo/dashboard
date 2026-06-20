@@ -41,14 +41,22 @@
   .status-bar.wait  { background:rgba(108,142,255,0.1); border:1px solid rgba(108,142,255,0.2); color:var(--accent2); }
   .status-dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
 
-  /* 진행 상황 */
+  /* API 키 설정 카드 */
+  .key-card { background:var(--card); border:1px solid rgba(255,181,71,0.3); border-radius:14px; padding:16px; margin-bottom:12px; }
+  .key-card-title { font-size:12px; font-weight:700; color:var(--warn); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .key-input-row { margin-bottom:10px; }
+  .key-label { font-size:10px; color:var(--text2); margin-bottom:4px; font-weight:600; }
+  .key-input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:11px; padding:8px 12px; border-radius:8px; outline:none; font-family:monospace; }
+  .key-input:focus { border-color:var(--accent); }
+  .key-save-btn { width:100%; background:var(--accent); color:#0B0F1A; border:none; font-size:13px; font-weight:700; padding:10px; border-radius:10px; cursor:pointer; margin-top:4px; }
+  .key-saved { display:none; background:rgba(38,200,135,0.1); border:1px solid rgba(38,200,135,0.2); border-radius:10px; padding:10px; text-align:center; font-size:12px; color:var(--up); }
+
   .progress-wrap { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; display:none; }
   .progress-wrap.show { display:block; }
   .progress-label { font-size:12px; color:var(--text2); margin-bottom:8px; }
   .progress-track { background:var(--border); border-radius:4px; height:6px; overflow:hidden; }
   .progress-fill { height:100%; background:var(--accent); border-radius:4px; transition:width 0.4s; }
   .progress-log { margin-top:10px; font-size:10px; color:var(--text3); max-height:60px; overflow-y:auto; }
-  .progress-log div { padding:1px 0; }
 
   .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .sum-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; }
@@ -123,7 +131,7 @@
 <div class="topbar">
   <div class="topbar-row">
     <div class="logo">KRX<span>lens</span></div>
-    <button class="refresh-btn" id="refreshBtn" onclick="fetchPricesViaClaude()">
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchAllPrices()">
       <span class="refresh-icon" id="refreshIcon">↻</span>
       <span id="refreshLabel">주가 업데이트</span>
     </button>
@@ -137,10 +145,31 @@
 
 <!-- 포트폴리오 -->
 <div class="page active" id="page-portfolio">
+  <div class="sec-title">KIS API 설정</div>
+
+  <!-- 키 미설정 상태 -->
+  <div id="keySetupCard" class="key-card">
+    <div class="key-card-title">🔑 API 키를 입력해주세요</div>
+    <div class="key-input-row">
+      <div class="key-label">APP KEY</div>
+      <input class="key-input" id="inputAppKey" type="password" placeholder="KIS Developers에서 발급받은 App Key">
+    </div>
+    <div class="key-input-row">
+      <div class="key-label">APP SECRET</div>
+      <input class="key-input" id="inputAppSecret" type="password" placeholder="KIS Developers에서 발급받은 App Secret">
+    </div>
+    <div class="key-input-row">
+      <div class="key-label">계좌번호 (예: 12345678-01)</div>
+      <input class="key-input" id="inputAccount" type="text" placeholder="한국투자증권 계좌번호">
+    </div>
+    <button class="key-save-btn" onclick="saveKeys()">저장하고 주가 가져오기</button>
+  </div>
+  <div id="keySavedMsg" class="key-saved">✅ API 키 저장됨 — 주가 업데이트 버튼으로 새로고침하세요</div>
+
   <div class="sec-title">내 자산 현황</div>
   <div id="statusBar" class="status-bar wait">
     <div class="status-dot"></div>
-    <span>"주가 업데이트" 버튼을 눌러 Claude가 실시간 주가를 가져와요</span>
+    <span>API 키 입력 후 주가를 가져올 수 있어요</span>
   </div>
   <div class="progress-wrap" id="progressWrap">
     <div class="progress-label" id="progressLabel">주가 조회 중...</div>
@@ -185,6 +214,15 @@
 </div>
 
 <script>
+// ══════════════════════════════════════════
+//  ★ 여기에 KIS API 키를 직접 입력하세요 ★
+//  GitHub에서 index.html 열어서 아래 두 줄만 수정!
+// ══════════════════════════════════════════
+const PRESET_APP_KEY    = "PSNG7Vm60Sgn33B1iegbb8x0unAAgxFBVUkG";   // 예: "PSxxxxxxxxxxxxxxxxxx"
+const PRESET_APP_SECRET = "jrd/3zw8LdHF525CQ44mYpzu7O7GjI3LQpAJb+IfyO8N56Kmgv85zU/YDfHcia/1srFy5CisSR3XDnMEyvLicC3tq7hv6l6EcZSuMPzq2kdHidkSVAHPHQW6dbgxqHiZiptic6dZIUYvxOI3TwuKD4cmjfjCDu+dskBD99q55/JiBKbNxlQ=";   // 예: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+const PRESET_ACCOUNT    = "44775130";   // 예: "12345678-01"
+// ══════════════════════════════════════════
+
 // ── 포트폴리오 ──
 const holdings = [
   { name:'제주반도체',     code:'080220', avg:106171, qty:3166,  credit:false, sector:'반도체' },
@@ -211,100 +249,146 @@ const sectorColor = {
 
 let prices = {};
 let currentSector = '전체';
+let APP_KEY = PRESET_APP_KEY;
+let APP_SECRET = PRESET_APP_SECRET;
+let ACCOUNT = PRESET_ACCOUNT;
+let ACCESS_TOKEN = '';
 
-// ── Claude API로 주가 조회 ──
-async function fetchPricesViaClaude() {
-  const btn = document.getElementById('refreshBtn');
+// ── 키 저장 ──
+function saveKeys() {
+  APP_KEY    = document.getElementById('inputAppKey').value.trim();
+  APP_SECRET = document.getElementById('inputAppSecret').value.trim();
+  ACCOUNT    = document.getElementById('inputAccount').value.trim();
+  if (!APP_KEY || !APP_SECRET || !ACCOUNT) {
+    alert('세 항목 모두 입력해주세요!'); return;
+  }
+  sessionStorage.setItem('kis_key', APP_KEY);
+  sessionStorage.setItem('kis_secret', APP_SECRET);
+  sessionStorage.setItem('kis_account', ACCOUNT);
+  document.getElementById('keySetupCard').style.display = 'none';
+  document.getElementById('keySavedMsg').style.display = 'block';
+  fetchAllPrices();
+}
+
+// ── 저장된 키 복원 ──
+function loadSavedKeys() {
+  if (PRESET_APP_KEY) {
+    APP_KEY = PRESET_APP_KEY;
+    APP_SECRET = PRESET_APP_SECRET;
+    ACCOUNT = PRESET_ACCOUNT;
+    document.getElementById('keySetupCard').style.display = 'none';
+    document.getElementById('keySavedMsg').style.display = 'block';
+    return true;
+  }
+  const k = sessionStorage.getItem('kis_key');
+  const s = sessionStorage.getItem('kis_secret');
+  const a = sessionStorage.getItem('kis_account');
+  if (k && s && a) {
+    APP_KEY = k; APP_SECRET = s; ACCOUNT = a;
+    document.getElementById('keySetupCard').style.display = 'none';
+    document.getElementById('keySavedMsg').style.display = 'block';
+    return true;
+  }
+  return false;
+}
+
+// ── KIS API: 토큰 발급 ──
+async function getAccessToken() {
+  const res = await fetch('https://openapi.koreainvestment.com:9443/oauth2/tokenP', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      grant_type: 'client_credentials',
+      appkey: APP_KEY,
+      appsecret: APP_SECRET
+    })
+  });
+  const data = await res.json();
+  if (!data.access_token) throw new Error('토큰 발급 실패: ' + (data.message || JSON.stringify(data)));
+  return data.access_token;
+}
+
+// ── KIS API: 주식 현재가 조회 ──
+async function getStockPrice(token, code) {
+  const res = await fetch(
+    `https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price?fid_cond_mrkt_div_code=J&fid_input_iscd=${code}`,
+    {
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'appkey': APP_KEY,
+        'appsecret': APP_SECRET,
+        'tr_id': 'FHKST01010100',
+        'content-type': 'application/json'
+      }
+    }
+  );
+  const data = await res.json();
+  const price = parseInt(data?.output?.stck_prpr);
+  const prevClose = parseInt(data?.output?.stck_clpr);
+  const change = parseFloat(data?.output?.prdy_ctrt); // 전일대비율
+  if (!price) throw new Error('주가 없음');
+  return { price, prevClose, change };
+}
+
+// ── 전체 주가 조회 ──
+async function fetchAllPrices() {
+  if (!APP_KEY) { alert('먼저 API 키를 입력해주세요!'); return; }
+
+  const btn  = document.getElementById('refreshBtn');
   const icon = document.getElementById('refreshIcon');
-  const label = document.getElementById('refreshLabel');
   const wrap = document.getElementById('progressWrap');
   const fill = document.getElementById('progressFill');
   const log  = document.getElementById('progressLog');
 
   btn.disabled = true;
   icon.classList.add('spin');
-  label.textContent = '조회 중...';
+  document.getElementById('refreshLabel').textContent = '조회 중...';
   wrap.classList.add('show');
   log.innerHTML = '';
   fill.style.width = '0%';
-  setStatus('wait', 'Claude가 실시간 주가를 검색하고 있어요...');
+  setStatus('wait', '한국투자증권 서버에서 실시간 주가를 가져오는 중...');
 
-  // 4개씩 배치로 나눠 조회 (API 부하 분산)
-  const batchSize = 4;
-  const batches = [];
-  for (let i = 0; i < holdings.length; i += batchSize) {
-    batches.push(holdings.slice(i, i + batchSize));
-  }
+  try {
+    addLog('🔐 토큰 발급 중...');
+    ACCESS_TOKEN = await getAccessToken();
+    addLog('✅ 토큰 발급 완료');
 
-  let done = 0;
-  for (const batch of batches) {
-    const names = batch.map(h => `${h.name}(${h.code})`).join(', ');
-    addLog(`🔍 조회 중: ${batch.map(h=>h.name).join(', ')}`);
-
-    const prompt = `다음 한국 주식의 오늘 현재가(종가 또는 최근 거래가)를 알려주세요: ${names}
-
-반드시 JSON만 반환하세요 (설명 없이):
-{"prices":{"종목코드":현재가숫자, ...}}
-
-예시: {"prices":{"080220":95000,"149150":22000}}
-
-숫자만 입력하세요 (콤마, 원화기호 없이). 모르는 종목은 null로.`;
-
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 300,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await res.json();
-      const text = data.content
-        .filter(c => c.type === 'text')
-        .map(c => c.text).join('');
-      const clean = text.replace(/```json|```/g, '').trim();
-      const match = clean.match(/\{[\s\S]*\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]);
-        Object.entries(parsed.prices || {}).forEach(([code, price]) => {
-          if (price) {
-            prices[code] = price;
-            const name = holdings.find(h=>h.code===code)?.name || code;
-            addLog(`✅ ${name}: ${price.toLocaleString()}원`);
-          }
-        });
+    let done = 0;
+    for (const h of holdings) {
+      try {
+        const result = await getStockPrice(ACCESS_TOKEN, h.code);
+        prices[h.code] = result;
+        addLog(`✅ ${h.name}: ${result.price.toLocaleString()}원 (${result.change >= 0 ? '+' : ''}${result.change}%)`);
+      } catch(e) {
+        addLog(`⚠️ ${h.name}: 조회 실패`);
       }
-    } catch(e) {
-      addLog(`⚠️ 오류: ${e.message}`);
+      done++;
+      fill.style.width = (done / holdings.length * 100) + '%';
+      document.getElementById('progressLabel').textContent = `주가 조회 중... (${done}/${holdings.length})`;
+      // API 호출 간격 (과부하 방지)
+      await sleep(120);
     }
 
-    done += batch.length;
-    fill.style.width = (done / holdings.length * 100) + '%';
-    document.getElementById('progressLabel').textContent =
-      `주가 조회 중... (${done}/${holdings.length})`;
+    const now = new Date();
+    const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const ok = Object.keys(prices).length;
+    setStatus('ok', `${ok}개 종목 실시간 업데이트 완료 · ${t} 기준`);
+
+  } catch(e) {
+    setStatus('err', `오류: ${e.message}`);
+    addLog('❌ ' + e.message);
   }
 
   btn.disabled = false;
   icon.classList.remove('spin');
-  label.textContent = '새로고침';
+  document.getElementById('refreshLabel').textContent = '새로고침';
   wrap.classList.remove('show');
-
-  const successCount = Object.keys(prices).length;
-  const now = new Date();
-  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-  if (successCount === 0) {
-    setStatus('err', '주가 조회에 실패했어요. 다시 시도해주세요.');
-  } else {
-    setStatus('ok', `${successCount}개 종목 업데이트 완료 · ${timeStr} 기준`);
-  }
 
   renderSummary();
   renderHoldings(currentSector);
 }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function addLog(msg) {
   const log = document.getElementById('progressLog');
@@ -321,21 +405,22 @@ function setStatus(type, msg) {
 }
 
 // ── 계산 ──
-function getPrice(h) { return prices[h.code] || h.avg; }
-function hasPrice(h) { return !!prices[h.code]; }
+function getPrice(h)   { return prices[h.code]?.price || h.avg; }
+function getChange(h)  { return prices[h.code]?.change || null; }
+function hasPrice(h)   { return !!prices[h.code]; }
 
 function calc(h) {
   const price = getPrice(h);
   const val   = price * h.qty;
-  const cost  = h.avg * h.qty;
+  const cost  = h.avg  * h.qty;
   const pnl   = val - cost;
   const pct   = (price - h.avg) / h.avg * 100;
   return { ...h, price, val, cost, pnl, pct };
 }
 
-// ── 요약 카드 ──
+// ── 요약 ──
 function renderSummary() {
-  const calced = holdings.map(calc);
+  const calced   = holdings.map(calc);
   const totalVal  = calced.reduce((s,h)=>s+h.val, 0);
   const totalCost = calced.reduce((s,h)=>s+h.cost, 0);
   const totalPnl  = totalVal - totalCost;
@@ -369,20 +454,27 @@ function renderSummary() {
 // ── 보유 종목 ──
 function renderHoldings(sector='전체') {
   currentSector = sector;
-  const calced = holdings.map(calc);
-  const totalVal = calced.reduce((s,h)=>s+h.val, 0);
-  const filtered = sector==='전체' ? calced : calced.filter(h=>h.sector===sector);
-  const sorted = [...filtered].sort((a,b)=>b.val-a.val);
+  const calced   = holdings.map(calc);
+  const totalVal  = calced.reduce((s,h)=>s+h.val, 0);
+  const filtered  = sector==='전체' ? calced : calced.filter(h=>h.sector===sector);
+  const sorted    = [...filtered].sort((a,b)=>b.val-a.val);
 
-  const sectors = ['전체', ...new Set(calced.map(h=>h.sector))];
+  const sectors = ['전체',...new Set(calced.map(h=>h.sector))];
   document.getElementById('sectorTabs').innerHTML = sectors.map(s=>
     `<button class="stab ${s===sector?'active':''}" onclick="renderHoldings('${s}')">${s}</button>`
   ).join('');
 
   document.getElementById('holdingsList').innerHTML = sorted.map(h => {
-    const weight = h.val/totalVal*100;
-    const col = sectorColor[h.sector]||'#8A97B0';
-    const priceStr = hasPrice(h) ? h.price.toLocaleString()+'원' : `<span style="color:var(--text3)">${h.avg.toLocaleString()}원 (매입가)</span>`;
+    const weight  = h.val/totalVal*100;
+    const col     = sectorColor[h.sector]||'#8A97B0';
+    const dayChg  = getChange(h);
+    const dayStr  = dayChg!==null
+      ? `<span style="margin-left:6px;color:${dayChg>=0?'var(--up)':'var(--down)'}">당일 ${dayChg>=0?'+':''}${dayChg}%</span>`
+      : '';
+    const priceStr = hasPrice(h)
+      ? h.price.toLocaleString()+'원'
+      : `<span style="color:var(--text3)">${h.avg.toLocaleString()}원 (매입가)</span>`;
+
     return `<div class="holding-card ${h.credit?'credit-card':''}">
       <div class="holding-row">
         <div>
@@ -391,7 +483,7 @@ function renderHoldings(sector='전체') {
         </div>
         <div>
           <div class="holding-price">${priceStr}</div>
-          <div class="holding-chg ${h.pct>=0?'up':'down'}">${hasPrice(h)?(h.pct>=0?'▲':'▼')+' '+Math.abs(h.pct).toFixed(1)+'%':'─'}</div>
+          <div class="holding-chg ${h.pct>=0?'up':'down'}">${hasPrice(h)?(h.pct>=0?'▲':'▼')+Math.abs(h.pct).toFixed(1)+'%':'─'}${dayStr}</div>
         </div>
       </div>
       <div class="holding-bar-bg">
@@ -418,9 +510,9 @@ const valuationData = [
 
 function renderValuation() {
   document.getElementById('valuationList').innerHTML = valuationData.map(v => {
-    const h = holdings.find(x=>x.code===v.code);
-    const price = prices[v.code] || null;
-    const pct = h && price ? (price-h.avg)/h.avg*100 : null;
+    const h     = holdings.find(x=>x.code===v.code);
+    const price = prices[v.code]?.price || null;
+    const pct   = h && price ? (price-h.avg)/h.avg*100 : null;
     return `<div class="val-card">
       <div class="val-head">
         <div>
@@ -457,7 +549,7 @@ async function generateBriefing() {
   btn.disabled=true; btn.textContent='분석중...';
   content.innerHTML=`<div class="loading"><div class="spinner"></div>포트폴리오 분석 중...</div>`;
 
-  const calced = holdings.map(calc);
+  const calced    = holdings.map(calc);
   const totalVal  = calced.reduce((s,h)=>s+h.val,0);
   const totalCost = calced.reduce((s,h)=>s+h.cost,0);
   const totalPnl  = totalVal-totalCost;
@@ -481,10 +573,7 @@ JSON만 반환 (마크다운 없이):
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6', max_tokens:1500,
-        messages:[{role:'user',content:prompt}]
-      })
+      body:JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1500, messages:[{role:'user',content:prompt}] })
     });
     const data = await res.json();
     const text = data.content.map(i=>i.text||'').join('');
@@ -520,7 +609,6 @@ function switchTab(tab) {
   if(tab==='valuation') renderValuation();
 }
 
-// ── 유틸 ──
 function fmt(n) {
   const abs=Math.abs(n);
   if(abs>=1e8) return (n/1e8).toFixed(1)+'억';
@@ -528,7 +616,8 @@ function fmt(n) {
   return n.toLocaleString();
 }
 
-// 초기 렌더
+// ── 초기화 ──
+loadSavedKeys();
 renderSummary();
 renderHoldings();
 </script>
