@@ -169,22 +169,21 @@
 <script>
 const WORKER_URL = 'https://kis-proxy.sngdo77.workers.dev';
 
-// ★ market: J=코스피, Q=코스닥
 const holdings = [
-  { name:'제주반도체',     code:'080220', market:'Q', avg:106171, qty:3166,  credit:false, sector:'반도체' },
-  { name:'아바텍', code:'149950', market:'Q', avg:18063, qty:15709, credit:false, sector:'반도체장비' },
-  { name:'두산로보틱스',   code:'454910', market:'Q', avg:119000, qty:2230,  credit:false, sector:'로봇' },
-  { name:'주성엔지니어링', code:'036930', market:'Q', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
-  { name:'현대차',         code:'005380', market:'J', avg:740644, qty:410,   credit:true,  sector:'자동차' },
-  { name:'산일전기', code:'062040', market:'J', avg:27336, qty:567, credit:true, sector:'전기전자' },
-  { name:'LG이노텍',       code:'011070', market:'J', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
-  { name:'이수페타시스',   code:'007660', market:'Q', avg:145100, qty:916,   credit:true,  sector:'PCB' },
-  { name:'삼영',           code:'000370', market:'J', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
-  { name:'디아이',         code:'003160', market:'J', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
-  { name:'파워넷',         code:'037030', market:'Q', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
-  { name:'씨엠티엑스',     code:'222110', market:'Q', avg:120000, qty:2300,  credit:false, sector:'반도체' },
-  { name:'미래에셋증권',   code:'006800', market:'J', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
-  { name:'KODEX증권',      code:'102970', market:'J', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
+  { name:'제주반도체',     code:'080220', avg:106171, qty:3166,  credit:false, sector:'반도체' },
+  { name:'아바텍',         code:'149950', avg:18063,  qty:15709, credit:false, sector:'반도체장비' },
+  { name:'두산로보틱스',   code:'454910', avg:119000, qty:2230,  credit:false, sector:'로봇' },
+  { name:'주성엔지니어링', code:'036930', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
+  { name:'현대차',         code:'005380', avg:740644, qty:410,   credit:true,  sector:'자동차' },
+  { name:'산일전기',       code:'062040', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
+  { name:'LG이노텍',       code:'011070', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
+  { name:'이수페타시스',   code:'007660', avg:145100, qty:916,   credit:true,  sector:'PCB' },
+  { name:'삼영',           code:'000370', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
+  { name:'디아이',         code:'003160', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
+  { name:'파워넷',         code:'037030', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
+  { name:'씨엠티엑스',     code:'222110', avg:120000, qty:2300,  credit:false, sector:'반도체' },
+  { name:'미래에셋증권',   code:'006800', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
+  { name:'KODEX증권',      code:'102970', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
 ];
 
 const sectorColor = {
@@ -195,6 +194,17 @@ const sectorColor = {
 
 let prices = {};
 let currentSector = '전체';
+
+async function tryFetch(h) {
+  try {
+    const res = await fetch(`${WORKER_URL}?code=${h.code}`);
+    const data = await res.json();
+    if (data.price && data.price > 0) return data;
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
 
 async function fetchAllPrices() {
   const btn  = document.getElementById('refreshBtn');
@@ -211,30 +221,45 @@ async function fetchAllPrices() {
   fill.style.width = '0%';
   setStatus('wait', 'KIS API에서 실시간 주가를 가져오는 중...');
 
+  // 1차 시도
+  const failed = [];
   let done = 0;
   for (const h of holdings) {
-    try {
-      const res = await fetch(`${WORKER_URL}?code=${h.code}&market=${h.market}`);
-      const data = await res.json();
-      if (data.price && data.price > 0) {
-        prices[h.code] = data;
-        addLog(`✅ ${h.name}: ${data.price.toLocaleString()}원 (${data.change>=0?'+':''}${data.change}%)`);
-      } else {
-        addLog(`⚠️ ${h.name}: ${data.error || '주가 없음'}`);
-      }
-    } catch(e) {
-      addLog(`❌ ${h.name}: ${e.message}`);
+    const result = await tryFetch(h);
+    if (result) {
+      prices[h.code] = result;
+      addLog(`✅ ${h.name}: ${result.price.toLocaleString()}원 (${result.change>=0?'+':''}${result.change}%)`);
+    } else {
+      failed.push(h);
+      addLog(`⏳ ${h.name}: 재시도 예정`);
     }
     done++;
     fill.style.width = (done / holdings.length * 100) + '%';
-    document.getElementById('progressLabel').textContent = `주가 조회 중... (${done}/${holdings.length})`;
+    document.getElementById('progressLabel').textContent = `1차 조회 중... (${done}/${holdings.length})`;
     await sleep(2000);
+  }
+
+  // 실패 종목 재시도
+  if (failed.length > 0) {
+    addLog(`🔄 ${failed.length}개 종목 재시도 중...`);
+    await sleep(3000);
+    for (const h of failed) {
+      document.getElementById('progressLabel').textContent = `재시도 중... ${h.name}`;
+      const result = await tryFetch(h);
+      if (result) {
+        prices[h.code] = result;
+        addLog(`✅ ${h.name} 재시도 성공: ${result.price.toLocaleString()}원`);
+      } else {
+        addLog(`❌ ${h.name}: 최종 실패`);
+      }
+      await sleep(2000);
+    }
   }
 
   btn.disabled = false;
   icon.classList.remove('spin');
   document.getElementById('refreshLabel').textContent = '새로고침';
-//  wrap.classList.remove('show');
+  wrap.classList.remove('show');
 
   const ok = Object.keys(prices).length;
   const now = new Date();
@@ -318,7 +343,7 @@ function renderHoldings(sector='전체') {
 
 const valuationData = [
   { name:'제주반도체',     code:'080220', per:18.2, pbr:1.2,  roe:7.1,  debt:28,  cap:'3,115억' },
-  { name:'아바텍', code:'149950', market:'Q', avg:18063, qty:15709, credit:false, sector:'반도체장비' },
+  { name:'아바텍',         code:'149950', per:12.4, pbr:1.8,  roe:14.8, debt:22,  cap:'3,379억' },
   { name:'두산로보틱스',   code:'454910', per:88.4, pbr:5.2,  roe:5.8,  debt:31,  cap:'4조2천억' },
   { name:'주성엔지니어링', code:'036930', per:14.1, pbr:2.1,  roe:15.2, debt:18,  cap:'1조6천억' },
   { name:'이수페타시스',   code:'007660', per:16.8, pbr:3.4,  roe:21.4, debt:44,  cap:'1조3천억' },
