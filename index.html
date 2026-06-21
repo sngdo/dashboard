@@ -175,7 +175,7 @@ const holdings = [
   { name:'두산로보틱스',   code:'454910', avg:119000, qty:2230,  credit:false, sector:'로봇' },
   { name:'주성엔지니어링', code:'036930', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
   { name:'현대차',         code:'005380', avg:740644, qty:410,   credit:true,  sector:'자동차' },
-  { name:'산일전기',       code:'062040', avg:273360,  qty:567,   credit:true,  sector:'전기전자' },
+  { name:'산일전기',       code:'062040', avg:273360, qty:567,   credit:true,  sector:'전기전자' },
   { name:'LG이노텍',       code:'011070', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
   { name:'이수페타시스',   code:'007660', avg:145100, qty:916,   credit:true,  sector:'PCB' },
   { name:'삼영',           code:'000370', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
@@ -212,7 +212,6 @@ async function fetchAllPrices() {
   document.getElementById('progressLabel').textContent = '전체 종목 조회 중... (시간이 걸릴 수 있어요)';
 
   try {
-    // Worker에 전체 종목코드를 한번에 전달
     const codes = holdings.map(h => h.code).join(',');
     const res = await fetch(`${WORKER_URL}?codes=${codes}`);
     const data = await res.json();
@@ -274,22 +273,31 @@ function calc(h) {
 
 function renderSummary() {
   const c = holdings.map(calc);
-  // 일반 종목
   const normal = c.filter(h=>!h.credit);
   const credit = c.filter(h=>h.credit);
+
+  // 일반 종목 손익
+  const normalPnl = normal.reduce((s,h)=>s+h.pnl, 0);
+  const normalVal = normal.reduce((s,h)=>s+h.val, 0);
+  const normalCost = normal.reduce((s,h)=>s+h.cost, 0);
+
+  // 신용 종목 손익
+  const creditPnl = credit.reduce((s,h)=>s+h.pnl, 0);
+
   // 총 손익 = 일반 손익 + 신용 손익
-  const totalPnl = c.reduce((s,h)=>s+h.pnl, 0);
+  const totalPnl = normalPnl + creditPnl;
   const totalCost = c.reduce((s,h)=>s+h.cost, 0);
   const totalPct = totalPnl / totalCost * 100;
-  // 총 평가금액 = 일반 평가금액 + 총손익
-  const normalVal = normal.reduce((s,h)=>s+h.val, 0);
-  const displayVal = normalVal + totalPnl;
-  const win=c.filter(h=>h.pnl>=0).length;
-  const creditPnl = credit.reduce((s,h)=>s+h.pnl, 0);
+
+  // 총 평가금액 = 일반 평가금액 + 신용 손익
+  const displayVal = normalVal + creditPnl;
+
+  const win = c.filter(h=>h.pnl>=0).length;
+
   document.getElementById('summaryGrid').innerHTML = `
     <div class="sum-card"><div class="sum-label">총 평가금액</div>
       <div class="sum-value" style="font-size:15px">${fmt(displayVal)}원</div>
-      <div class="sum-sub">일반 ${fmt(normalVal)}원 + 손익</div></div>
+      <div class="sum-sub">일반 ${fmt(normalVal)}원 + 신용손익</div></div>
     <div class="sum-card"><div class="sum-label">총 손익</div>
       <div class="sum-value ${totalPnl>=0?'up':'down'}" style="font-size:15px">${totalPnl>=0?'+':''}${fmt(totalPnl)}원</div>
       <div class="sum-sub ${totalPnl>=0?'up':'down'}">${totalPct>=0?'+':''}${totalPct.toFixed(2)}%</div></div>
