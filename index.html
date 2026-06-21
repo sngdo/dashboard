@@ -175,13 +175,13 @@ const holdings = [
   { name:'두산로보틱스',   code:'454910', avg:119000, qty:2230,  credit:false, sector:'로봇' },
   { name:'주성엔지니어링', code:'036930', avg:192288, qty:446,   credit:false, sector:'반도체장비' },
   { name:'현대차',         code:'005380', avg:740644, qty:410,   credit:true,  sector:'자동차' },
-  { name:'산일전기',       code:'062040', avg:273360,  qty:567,   credit:true,  sector:'전기전자' },
+  { name:'산일전기',       code:'062040', avg:27336,  qty:567,   credit:true,  sector:'전기전자' },
   { name:'LG이노텍',       code:'011070', avg:1091000,qty:100,   credit:true,  sector:'전기전자' },
   { name:'이수페타시스',   code:'007660', avg:145100, qty:916,   credit:true,  sector:'PCB' },
   { name:'삼영',           code:'000370', avg:8079,   qty:12359, credit:true,  sector:'전기전자' },
   { name:'디아이',         code:'003160', avg:28692,  qty:3400,  credit:true,  sector:'반도체장비' },
   { name:'파워넷',         code:'037030', avg:6196,   qty:20000, credit:true,  sector:'전기전자' },
-  { name:'씨엠티엑스',     code:'388210', avg:130834, qty:2300,  credit:false, sector:'반도체' },
+  { name:'씨엠티엑스',     code:'222110', avg:120000, qty:2300,  credit:false, sector:'반도체' },
   { name:'미래에셋증권',   code:'006800', avg:70000,  qty:1459,  credit:true,  sector:'금융' },
   { name:'KODEX증권',      code:'102970', avg:30000,  qty:3148,  credit:true,  sector:'ETF' },
 ];
@@ -274,23 +274,31 @@ function calc(h) {
 
 function renderSummary() {
   const c = holdings.map(calc);
-  const tv=c.reduce((s,h)=>s+h.val,0), tc=c.reduce((s,h)=>s+h.cost,0);
-  const tp=tv-tc, tpct=tp/tc*100;
-  const cv=c.filter(h=>h.credit).reduce((s,h)=>s+h.val,0);
+  // 일반 종목
+  const normal = c.filter(h=>!h.credit);
+  const credit = c.filter(h=>h.credit);
+  // 총 손익 = 일반 손익 + 신용 손익
+  const totalPnl = c.reduce((s,h)=>s+h.pnl, 0);
+  const totalCost = c.reduce((s,h)=>s+h.cost, 0);
+  const totalPct = totalPnl / totalCost * 100;
+  // 총 평가금액 = 일반 평가금액 + 총손익
+  const normalVal = normal.reduce((s,h)=>s+h.val, 0);
+  const displayVal = normalVal + totalPnl;
   const win=c.filter(h=>h.pnl>=0).length;
+  const creditPnl = credit.reduce((s,h)=>s+h.pnl, 0);
   document.getElementById('summaryGrid').innerHTML = `
     <div class="sum-card"><div class="sum-label">총 평가금액</div>
-      <div class="sum-value" style="font-size:15px">${fmt(tv)}원</div>
-      <div class="sum-sub">매입 ${fmt(tc)}원</div></div>
+      <div class="sum-value" style="font-size:15px">${fmt(displayVal)}원</div>
+      <div class="sum-sub">일반 ${fmt(normalVal)}원 + 손익</div></div>
     <div class="sum-card"><div class="sum-label">총 손익</div>
-      <div class="sum-value ${tp>=0?'up':'down'}" style="font-size:15px">${tp>=0?'+':''}${fmt(tp)}원</div>
-      <div class="sum-sub ${tp>=0?'up':'down'}">${tpct>=0?'+':''}${tpct.toFixed(2)}%</div></div>
+      <div class="sum-value ${totalPnl>=0?'up':'down'}" style="font-size:15px">${totalPnl>=0?'+':''}${fmt(totalPnl)}원</div>
+      <div class="sum-sub ${totalPnl>=0?'up':'down'}">${totalPct>=0?'+':''}${totalPct.toFixed(2)}%</div></div>
     <div class="sum-card"><div class="sum-label">수익/손실</div>
-      <div class="sum-value" style="color:var(--up)">${win}종목</div>
+      <div class="sum-value" style="color:var(--up)">${win}종목 수익</div>
       <div class="sum-sub" style="color:var(--down)">${c.length-win}종목 손실</div></div>
-    <div class="sum-card"><div class="sum-label">신용 평가액</div>
-      <div class="sum-value" style="color:var(--warn);font-size:14px">${fmt(cv)}원</div>
-      <div class="sum-sub">${c.filter(h=>h.credit).length}개 종목</div></div>`;
+    <div class="sum-card"><div class="sum-label">신용 손익</div>
+      <div class="sum-value ${creditPnl>=0?'up':'down'}" style="font-size:14px">${creditPnl>=0?'+':''}${fmt(creditPnl)}원</div>
+      <div class="sum-sub">${credit.length}개 종목</div></div>`;
 }
 
 function renderHoldings(sector='전체') {
